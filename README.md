@@ -39,8 +39,8 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/Chinmay1220/Query_Agent_Cleric.git
-   cd Query_Agent_Cleric
+   git clone https://github.com/Chinmay1220/Cleric_Query_Agent.git
+   cd Cleric_Query_Agent
 
 1. **Install Dependencies**
    ```bash

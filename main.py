@@ -242,6 +242,7 @@ def gather_kubernetes_data():
         #Log and print the gathered data
         #print("\n--- Gathered Kubernetes Cluster Information ---")
         #print(json.dumps(cluster_info, indent=2))
+        
         #Return gathered data
         return cluster_info
     

@@ -32,8 +32,8 @@ def gather_kubernetes_data():
         core_api = client.CoreV1Api()
         apps_api = client.AppsV1Api()
         batch_api = client.BatchV1Api()
-        networking_api = client.NetworkingV1Api()  # For Network Policies and Ingresses
-        apiextensions_api = client.ApiextensionsV1Api()  # For CRDs
+        networking_api = client.NetworkingV1Api() 
+        apiextensions_api = client.ApiextensionsV1Api()  
 
         cluster_info = {}
 
@@ -54,7 +54,7 @@ def gather_kubernetes_data():
                 "port": [
                     p.container_port for c in dep.spec.template.spec.containers if c.ports for p in c.ports
                 ],
-                "age": str(datetime.now(timezone.utc) - dep.metadata.creation_timestamp).split(".")[0],  # Human-readable age
+                "age": str(datetime.now(timezone.utc) - dep.metadata.creation_timestamp).split(".")[0],  
             }
             for dep in deployments.items
         ]
@@ -85,7 +85,7 @@ def gather_kubernetes_data():
                     [label.split("/")[-1] for label in node.metadata.labels.keys() if "role" in label]
                 ) or "None",  # Extract roles based on labels
                 "age": str(datetime.now(timezone.utc) - node.metadata.creation_timestamp).split(".")[0],  # Node age
-                "version": node.status.node_info.kubelet_version,  # Kubernetes version on the node
+                "version": node.status.node_info.kubelet_version,  # Kube version on the node
             }
             for node in nodes.items
         ]
@@ -99,10 +99,10 @@ def gather_kubernetes_data():
                 "replicas": rs.spec.replicas,
                 "available_replicas": rs.status.available_replicas or 0,  # Default to 0 if not set
                 "ready_replicas": rs.status.ready_replicas or 0,  # Default to 0 if not set
-                "age": str(datetime.now(timezone.utc) - rs.metadata.creation_timestamp).split(".")[0],  # Human-readable age
+                "age": str(datetime.now(timezone.utc) - rs.metadata.creation_timestamp).split(".")[0],  
                 "labels": rs.metadata.labels or {},  # Include labels
                 "selector": rs.spec.selector.match_labels or {},  # Label selector
-                "owner": rs.metadata.owner_references[0].name if rs.metadata.owner_references else "None",  # Owner (Deployment)
+                "owner": rs.metadata.owner_references[0].name if rs.metadata.owner_references else "None",  
             }
             for rs in replicasets.items
         ]

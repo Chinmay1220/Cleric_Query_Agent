@@ -58,14 +58,23 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 
 Processed Queries and Answers:
 Q: "How many pods are running?" A: "10"
-Q: "Name one pod which is running?" A: "frontend-6b5f4cf68c"
+
+Q: "Name one pod which is running?" A: "frontend"
+
 Q: "How many replicas are set for the 'frontend deployment'?" A: "3"
+
 Q: "What is the AGE of pod named nginx'?" A: ""2 days""
+
 Q: "What type of redis-leader deployment is?" A: "Stateful"
+
 Q: "What is the status of all running pods in the cluster?" A: "Running"
+
 Q: "How many pods are deployed across all namespaces?" A: "Unknown"
+
 Q: "Are there any recent updates or changes to secrets or ConfigMaps?" A: "Yes"
+
 Q: "What is the status of the pod named 'redis-leader'?" A: "Running"
+
 Q: "Which pod is spawned by frontend deployment?" A: "php-redis"
 
 **Conclusion:**

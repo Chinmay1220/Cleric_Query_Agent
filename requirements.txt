@@ -3,6 +3,5 @@ uvicorn
 pydantic
 openai==0.28.0
 kubernetes
-python-dotenv
 requests
 flask

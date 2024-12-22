@@ -82,16 +82,34 @@ def gather_kubernetes_data():
         ]
         
         # Pods
+        # Pods
         pods = core_api.list_pod_for_all_namespaces()
         cluster_info["pods"] = [
             {
                 "name": pod.metadata.name,
                 "namespace": pod.metadata.namespace,
-                "containers": [c.name for c in pod.spec.containers],
+                "containers": [
+                    {
+                        "name": c.name,
+                        "image": c.image,
+                        "ports": [port.container_port for port in (c.ports or [])],  # Container ports
+                        "env": [
+                                {"name": env.name, "value": env.value} for env in (c.env or [])  # Environment variables
+                                ] if c.env else None,
+                    }
+                    for c in pod.spec.containers
+                                ],
                 "status": pod.status.phase,
-                "age": str(
-                    datetime.now(timezone.utc) - pod.metadata.creation_timestamp
-                ).split(".")[0],  # Convert timedelta to a human-readable string
+                "age": str(datetime.now(timezone.utc) - pod.metadata.creation_timestamp).split(".")[0],
+                "volumes": [
+                    {
+                        "name": volumes.name,
+                        "mount_path": mount.mount_path,
+                    }
+                    for volumes in (pod.spec.volumes or [])
+                    for container in pod.spec.containers if container.volume_mounts
+                    for mount in container.volume_mounts
+                          ],
             }
             for pod in pods.items
         ]
@@ -129,7 +147,7 @@ def gather_kubernetes_data():
             for rs in replicasets.items
         ]
 
-        # Persistent Volumes (PVs)
+         # Persistent Volumes (PVs)
         pv_api = client.CoreV1Api()
         pvs = pv_api.list_persistent_volume()
         cluster_info["pvs"] = [
@@ -142,7 +160,9 @@ def gather_kubernetes_data():
                 "access_modes": pv.spec.access_modes,
                 "volume_mode": pv.spec.volume_mode or "Filesystem",
                 "claim": pv.spec.claim_ref.name if pv.spec.claim_ref else "Unbound",
+                "namespace": pv.spec.claim_ref.namespace if pv.spec.claim_ref else "N/A",  # Added namespace of the claim
                 "age": str(datetime.now(timezone.utc) - pv.metadata.creation_timestamp).split(".")[0],
+                "mount_path": pv.metadata.annotations.get("kubernetes.io/mount-path", "N/A"),  # Fetch mount path if annotated
             }
             for pv in pvs.items
         ]
@@ -170,7 +190,12 @@ def gather_kubernetes_data():
         # ConfigMaps
         configmaps = core_api.list_config_map_for_all_namespaces()
         cluster_info["configmaps"] = [
-            {"name": cm.metadata.name, "namespace": cm.metadata.namespace}
+            {
+                "name": cm.metadata.name,
+                "namespace": cm.metadata.namespace,
+                "data": cm.data,  # Include all key-value pairs stored in the ConfigMap
+                "creation_time": str(datetime.now(timezone.utc) - cm.metadata.creation_timestamp).split(".")[0],
+            }
             for cm in configmaps.items
         ]
 

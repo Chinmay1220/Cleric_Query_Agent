@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify
 
 
 # Set up logs
-logging.basicConfig(level=logging.DEBUG, 
+logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s %(levelname)s - %(message)s',
                     filename='agent.log', filemode='a')
 
@@ -309,12 +309,12 @@ def query_kubernetes():
                 # Format the answer exactly as requested
                 formatted_answer = f'Q: "{user_query}" A: "{answer}"'
                 formatted_answers.append(formatted_answer)
-            else:
-                formatted_answers.append(f'Q: "{user_query}" A: "Invalid query format"')
 
                 # Log the results
                 logging.info(f"User Queries: {user_queries}")
                 logging.info(f"Agent Answers: {formatted_answers}")
+            else:
+                formatted_answers.append(f'Q: "{user_query}" A: "Invalid query format"')
         
         # Return the answers as a JSON response
         return jsonify({"answers": formatted_answers})

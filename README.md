@@ -57,7 +57,7 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 **Testing use case for example :**
 
 Processed Queries and Answers:
-Q: "How many pods are running?" A: "10"
+Q: "How many pods are running?" A: "10" /n
 
 Q: "Name one pod which is running?" A: "frontend"
 

@@ -6,25 +6,47 @@ from pydantic import BaseModel, ValidationError
 import logging
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
-
+import re
 
 # Set up logs
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s %(levelname)s - %(message)s',
-                    filename='agent.log', filemode='a')
-
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s - %(message)s',
+    filename='agent.log',
+    filemode='a'
+)
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Pydantic model for user query
-class UserQuery(BaseModel):
+#Function to Remove K8s-Style Pod Suffix
+def strip_k8s_suffix(pod_name: str) -> str:
+    """
+    Removes the last two dash-separated segments if they look like alphanumeric
+    hashes (e.g., 'frontend-6b5f4cf68c-6g5lt' -> 'frontend').
+    Otherwise returns the pod_name unchanged.
+    """
+    pattern = r'(.*)-[a-z0-9]+-[a-z0-9]+$'
+    match = re.match(pattern, pod_name)
+    if match:
+        return match.group(1)
+    return pod_name
+
+#Pydantic Models
+class QueryRequest(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
     query: str
     answer: str
 
-# Function for gathering Kubernetes data
 def gather_kubernetes_data():
-    try:    
+    """
+    Load Kubernetes config and retrieve cluster information:
+    deployments, pods, nodes, replicasets, etc.
+    Returns a dictionary 'cluster_info' with all relevant data.
+    """
+    try:
         # Load from ~/.kube/config
         config.load_kube_config()
 
@@ -32,14 +54,14 @@ def gather_kubernetes_data():
         core_api = client.CoreV1Api()
         apps_api = client.AppsV1Api()
         batch_api = client.BatchV1Api()
-        networking_api = client.NetworkingV1Api()  # For Network Policies
-        apiextensions_api = client.ApiextensionsV1Api()  # For CRDs
+        networking_api = client.NetworkingV1Api()
+        apiextensions_api = client.ApiextensionsV1Api()
 
         cluster_info = {}
 
-        # Cluster Info (API resources available)
+        # Example resource data; see original code for the full set
         cluster_info["cluster_info"] = [
-            {"name": resource.name, "kind": resource.kind} 
+            {"name": resource.name, "kind": resource.kind}
             for resource in core_api.get_api_resources().resources
         ]
 
@@ -97,12 +119,12 @@ def gather_kubernetes_data():
                 "name": rs.metadata.name,
                 "namespace": rs.metadata.namespace,
                 "replicas": rs.spec.replicas,
-                "available_replicas": rs.status.available_replicas or 0,  # Default to 0 if not set
-                "ready_replicas": rs.status.ready_replicas or 0,  # Default to 0 if not set
-                "age": str(datetime.now(timezone.utc) - rs.metadata.creation_timestamp).split(".")[0],  # Human-readable age
-                "labels": rs.metadata.labels or {},  # Include labels
-                "selector": rs.spec.selector.match_labels or {},  # Label selector
-                "owner": rs.metadata.owner_references[0].name if rs.metadata.owner_references else "None",  # Owner (Deployment)
+                "available_replicas": rs.status.available_replicas or 0,
+                "ready_replicas": rs.status.ready_replicas or 0,
+                "age": str(datetime.now(timezone.utc) - rs.metadata.creation_timestamp).split(".")[0],
+                "labels": rs.metadata.labels or {},
+                "selector": rs.spec.selector.match_labels or {},
+                "owner": rs.metadata.owner_references[0].name if rs.metadata.owner_references else "None",
             }
             for rs in replicasets.items
         ]
@@ -114,14 +136,14 @@ def gather_kubernetes_data():
             {
                 "name": pv.metadata.name,
                 "status": pv.status.phase,
-                "capacity": pv.spec.capacity["storage"],  # Storage capacity (e.g., 10Gi)
-                "storage_class": pv.spec.storage_class_name,  # Storage class name
-                "reclaim_policy": pv.spec.persistent_volume_reclaim_policy,  # Reclaim policy
-                "access_modes": pv.spec.access_modes,  # List of access modes
-                "volume_mode": pv.spec.volume_mode or "Filesystem",  # Volume mode (default to Filesystem)
-                "claim": pv.spec.claim_ref.name if pv.spec.claim_ref else "Unbound",  # Bound PVC name or Unbound
-                "age": str(datetime.now(timezone.utc) - pv.metadata.creation_timestamp).split(".")[0],  # Human-readable age
-            }   
+                "capacity": pv.spec.capacity["storage"],  # e.g., 10Gi
+                "storage_class": pv.spec.storage_class_name,
+                "reclaim_policy": pv.spec.persistent_volume_reclaim_policy,
+                "access_modes": pv.spec.access_modes,
+                "volume_mode": pv.spec.volume_mode or "Filesystem",
+                "claim": pv.spec.claim_ref.name if pv.spec.claim_ref else "Unbound",
+                "age": str(datetime.now(timezone.utc) - pv.metadata.creation_timestamp).split(".")[0],
+            }
             for pv in pvs.items
         ]
 
@@ -132,7 +154,7 @@ def gather_kubernetes_data():
             for secret in secrets.items
         ]
 
-        #HPAs
+        # HPAs
         hpa_api = client.AutoscalingV1Api()
         hpas = hpa_api.list_horizontal_pod_autoscaler_for_all_namespaces()
         cluster_info["hpas"] = [
@@ -145,14 +167,14 @@ def gather_kubernetes_data():
             for hpa in hpas.items
         ]
 
-        #ConfigMaps
+        # ConfigMaps
         configmaps = core_api.list_config_map_for_all_namespaces()
         cluster_info["configmaps"] = [
             {"name": cm.metadata.name, "namespace": cm.metadata.namespace}
             for cm in configmaps.items
         ]
 
-        #CronJobs
+        # CronJobs
         cronjobs = batch_api.list_cron_job_for_all_namespaces()
         cluster_info["cronjobs"] = [
             {
@@ -163,8 +185,7 @@ def gather_kubernetes_data():
             for cronjob in cronjobs.items
         ]
 
-
-        #Resource Quotas
+        # Resource Quotas
         resource_quotas = core_api.list_resource_quota_for_all_namespaces()
         cluster_info["resource_quotas"] = [
             {
@@ -175,7 +196,7 @@ def gather_kubernetes_data():
             for rq in resource_quotas.items
         ]
 
-        #Events
+        # Events
         events_api = core_api.list_event_for_all_namespaces()
         cluster_info["events"] = [
             {
@@ -188,7 +209,7 @@ def gather_kubernetes_data():
             for event in events_api.items
         ]
 
-        #Network Policies
+        # Network Policies
         network_policies = networking_api.list_network_policy_for_all_namespaces()
         cluster_info["network_policies"] = [
             {
@@ -196,15 +217,15 @@ def gather_kubernetes_data():
                 "namespace": np.metadata.namespace,
             }
             for np in network_policies.items
-        ]   
+        ]
 
-        #CRDs
+        # CRDs
         crds = apiextensions_api.list_custom_resource_definition()
         cluster_info["crds"] = [
             {"name": crd.metadata.name} for crd in crds.items
         ]
 
-        #StatefulSets
+        # StatefulSets
         statefulsets = apps_api.list_stateful_set_for_all_namespaces()
         cluster_info["statefulsets"] = [
             {
@@ -215,7 +236,7 @@ def gather_kubernetes_data():
             for ss in statefulsets.items
         ]
 
-        #Ingresses
+        # Ingresses
         ingresses = networking_api.list_ingress_for_all_namespaces()
         cluster_info["ingresses"] = [
             {
@@ -226,40 +247,37 @@ def gather_kubernetes_data():
             for ingress in ingresses.items
         ]
 
-        #Kubeconfig Details (read config file content)
+        # Kubeconfig Details
         kubeconfig_path = os.path.expanduser("~/.kube/config")
         with open(kubeconfig_path) as kube_config_file:
             cluster_info["kubeconfig"] = kube_config_file.read()
 
-        #Current Context
+        # Current Context
         cluster_info["current_context"] = config.list_kube_config_contexts()[1]
 
-        #All Contexts
+        # All Contexts
         cluster_info["all_contexts"] = [
             context["name"] for context in config.list_kube_config_contexts()[0]
         ]
 
-        #Log and print the gathered data
-        #print("\n--- Gathered Kubernetes Cluster Information ---")
-        #print(json.dumps(cluster_info, indent=2))
-        
-        #Return gathered data
         return cluster_info
     
     except Exception as e:
         raise Exception(f"Error gathering Kubernetes information: {e}")
 
-#Function to send the data to GPT model
-
+#Function to send the data to GPT model   
 def query_llm(cluster_data, user_query):
+    """
+    Sends the cluster_data + user_query to OpenAI ChatCompletion
+    and returns the LLM's single-word response (or "Unknown").
+    """
     try:
-        #Construct the prompt with both gathered data and the user query
         prompt = f"""
         You are an expert Kubernetes assistant. Given the following information about a Kubernetes cluster:
 
         {json.dumps(cluster_data, indent=2)}
 
-        Answer the following query related to Kubernetes. Ensure your response is always a **single word**. 
+        Answer the following query related to Kubernetes. Ensure your response is always a **single word**.
         If the query is not relevant to Kubernetes or the provided information, respond with "Unknown".
 
         Query: {user_query}
@@ -267,71 +285,63 @@ def query_llm(cluster_data, user_query):
 
         openai.api_key = os.getenv('OPENAI_API_KEY')  #OpenAI key
 
-        #Sending the prompt to gpt-3.5-turbo using the v1/chat/completions endpoint
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use the chat model
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": prompt}],
-            max_tokens=50,  #Setting a low token limit to encourage brevity
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=50,
             temperature=0.5
         )
 
-        #Extract and return the answer from the LLM response
         return response.choices[0].message["content"].strip()
 
     except Exception as e:
         raise Exception(f"Error querying the LLM: {e}")
 
-#Flask endpoint to handle multiple user queries
-@app.route("/query/", methods=["POST"])
+@app.route("/query", methods=["POST"])
 def query_kubernetes():
+    """
+    Expects a JSON payload with a single 'query' string.
+    Returns a JSON response with 'query' and 'answer'.
+    """
     try:
-        #Retrieve the list of queries from the request
-        user_queries = request.json.get('queries')
-        
-        #Check if the queries exist
-        if not user_queries:
-            return jsonify({"error": "Queries are required"}), 400
-        
-        #Ensure that queries are in a list format
-        if not isinstance(user_queries, list):
-            return jsonify({"error": "Queries should be a list"}), 400
-        
-        #Gather Kubernetes data once
+        # Parse incoming JSON and validate with Pydantic
+        payload = request.get_json(force=True)
+        query_req = QueryRequest(**payload)  # Raises ValidationError if missing/invalid
+
+        # Gather cluster data once
         cluster_data = gather_kubernetes_data()
-        
-        #Process each query and store the answers
-        formatted_answers = []
-        for user_query in user_queries:
-            if isinstance(user_query, str):
-                answer = query_llm(cluster_data, user_query)
-                #Format the answer exactly as requested
-                formatted_answer = f'Q: "{user_query}" A: "{answer}"'
-                formatted_answers.append(formatted_answer)
 
-                #Log the results
-                logging.info(f"Processed Query: {user_query} -> {answer}")
-            else:
-                formatted_answer = f'Q: "{user_query}" A: "Invalid query format"'
-                formatted_answers.append(formatted_answer)
+        # Get the raw answer from the LLM
+        raw_answer = query_llm(cluster_data, query_req.query)
 
-                logging.warning(f"Invalid Query Format: {user_query}")
+        # Use the helper function to strip the suffix if it matches the pattern
+        # This ensures we don't remove meaningful parts like "redis-docker",
+        # but we do remove random suffixes like "6b5f4cf68c-6g5lt".
+        cleaned_answer = strip_k8s_suffix(raw_answer)
 
-        #Print the results
-        print("\nQueries and Answers:")
-        for fa in formatted_answers:
-            print(fa)
+        # Log the processed query and answer
+        logging.info(f"Processed Query: {query_req.query} -> {cleaned_answer}")
 
-        #Logging the answers
-        logging.info(f"All Agent Answers: {formatted_answers}")
+        # Construct a typed response
+        query_res = QueryResponse(query=query_req.query, answer=cleaned_answer)
 
-        #Return the answers as a JSON response
-        return jsonify({"answers": formatted_answers})
+        # Return JSON
+        return jsonify(query_res.dict())
+
+    except ValidationError as e:
+        # If the request body doesn't match the Pydantic schema
+        logging.error(f"Validation Error: {e}")
+        return jsonify({"error": "Invalid request payload", "details": e.errors()}), 400
 
     except Exception as e:
         logging.error(f"Error handling request: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
+
+                         
+

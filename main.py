@@ -302,20 +302,22 @@ def query_kubernetes():
         cluster_data = gather_kubernetes_data()
         
         # Process each query and store the answers
-        answers = []
+        formatted_answers = []
         for user_query in user_queries:
             if isinstance(user_query, str):
                 answer = query_llm(cluster_data, user_query)
-                answers.append({"query": user_query, "answer": answer})
+                # Format the answer exactly as requested
+                formatted_answer = f'Q: "{user_query}" A: "{answer}"'
+                formatted_answers.append(formatted_answer)
             else:
-                answers.append({"query": user_query, "error": "Invalid query format"})
-        
-        # Log the results
-        logging.info(f"User Queries: {user_queries}")
-        logging.info(f"Agent Answers: {answers}")
+                formatted_answers.append(f'Q: "{user_query}" A: "Invalid query format"')
 
+                # Log the results
+                logging.info(f"User Queries: {user_queries}")
+                logging.info(f"Agent Answers: {formatted_answers}")
+        
         # Return the answers as a JSON response
-        return jsonify({"answers": answers})
+        return jsonify({"answers": formatted_answers})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

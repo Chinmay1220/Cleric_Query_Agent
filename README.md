@@ -56,35 +56,17 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 
 **Testing use case for example :**
 
- **User Query 1:** How many nodes are there in the cluster?
-
- **Agent Answer 1:** The cluster has 1 node.
-
- **User Query 2:** How many pods are currently running in the cluster?
-
- **Agent Answer 2:** The cluster currently has 16 pods running.
-
- **User Query 3:** What is the AGE of pod named nginx'?
-
- **Agent Answer 3:** The age of the pod named "nginx-676b6c5bbc-rt792" is "14:51:24".
-
- **User Query 4:** What type of redis-leader deployment is?
-
- **Agent Answer 4:** The type of the "redis-leader" deployment is "docker.io/redis".
-
- **User Query 5:** What is the status of all running pods in the cluster?
-
- **Agent Answer 5:** Here is the status of all running pods in the cluster:
-
-1. Pod Name: frontend-6b5f4cf68c-6g5lt, Namespace: default, Status: Running
-   
-2. Pod Name: frontend-6b5f4cf68c-p84vz, Namespace: default, Status: Running
-   
-3. Pod Name: frontend-6b5f4cf68c-ws2r9, Namespace: default, Status: Running
-   
-4. Pod Name: httpd-deployment-bf5c4df59-gpvh9, Namespace: default, Status: Running
-   
-5. Pod Name: httpd-deployment-bf5c4df59-pqftr, Namespace:
+Processed Queries and Answers:
+Q: "How many pods are running?" A: "10"
+Q: "Name one pod which is running?" A: "frontend-6b5f4cf68c"
+Q: "How many replicas are set for the 'frontend deployment'?" A: "3"
+Q: "What is the AGE of pod named nginx'?" A: ""2 days""
+Q: "What type of redis-leader deployment is?" A: "Stateful"
+Q: "What is the status of all running pods in the cluster?" A: "Running"
+Q: "How many pods are deployed across all namespaces?" A: "Unknown"
+Q: "Are there any recent updates or changes to secrets or ConfigMaps?" A: "Yes"
+Q: "What is the status of the pod named 'redis-leader'?" A: "Running"
+Q: "Which pod is spawned by frontend deployment?" A: "php-redis"
 
 **Conclusion:**
 To wrap things up, this assignment really showcases how AI can interact with a Kubernetes cluster to answer queries. My approach involves gathering information from the cluster, using GPT-4 to process it, and delivering responses to the user. This is a good example of an AI agent in action, as it autonomously collects data, reasons through it, and takes action by answering queries.

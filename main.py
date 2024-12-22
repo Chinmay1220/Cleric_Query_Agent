@@ -87,12 +87,28 @@ def gather_kubernetes_data():
             {
                 "name": pod.metadata.name,
                 "namespace": pod.metadata.namespace,
-                "containers": [c.name for c in pod.spec.containers],
-                "volumes": [volume.name for volume in (pod.spec.volumes or [])],
+                "containers": [
+                    {
+                        "name": c.name,
+                        "image": c.image,
+                        "ports": [port.container_port for port in (c.ports or [])],  # Container ports
+                        "env": [
+                                {"name": env.name, "value": env.value} for env in (c.env or [])  # Environment variables
+                                ] if c.env else None,
+                    }
+                    for c in pod.spec.containers
+                                ],
                 "status": pod.status.phase,
-                "age": str(
-                    datetime.now(timezone.utc) - pod.metadata.creation_timestamp
-                ).split(".")[0],  # Convert timedelta to a human-readable string
+                "age": str(datetime.now(timezone.utc) - pod.metadata.creation_timestamp).split(".")[0],
+                "volumes": [
+                    {
+                        "name": volumes.name,
+                        "mount_path": mount.mount_path,
+                    }
+                    for volumes in (pod.spec.volumes or [])
+                    for container in pod.spec.containers if container.volume_mounts
+                    for mount in container.volume_mounts
+                          ],
             }
             for pod in pods.items
         ]
@@ -170,15 +186,10 @@ def gather_kubernetes_data():
             for hpa in hpas.items
         ]
 
-        # ConfigMaps
+        #ConfigMaps
         configmaps = core_api.list_config_map_for_all_namespaces()
         cluster_info["configmaps"] = [
-            {
-                "name": cm.metadata.name,
-                "namespace": cm.metadata.namespace,
-                "data": cm.data,  # Include all key-value pairs stored in the ConfigMap
-                "creation_time": str(datetime.now(timezone.utc) - cm.metadata.creation_timestamp).split(".")[0],
-            }
+            {"name": cm.metadata.name, "namespace": cm.metadata.namespace}
             for cm in configmaps.items
         ]
 

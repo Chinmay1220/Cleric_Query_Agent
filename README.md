@@ -56,25 +56,17 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 
 **Testing use case for example :**
 
-Processed Queries and Answers:
+Processed Queries and Answers:  
 Q: "How many pods are running?" A: "10"  
-Q: "Name one pod which is running?" A: "frontend"
-
-Q: "How many replicas are set for the 'frontend deployment'?" A: "3"
-
-Q: "What is the AGE of pod named nginx'?" A: ""2 days""
-
-Q: "What type of redis-leader deployment is?" A: "Stateful"
-
-Q: "What is the status of all running pods in the cluster?" A: "Running"
-
-Q: "How many pods are deployed across all namespaces?" A: "Unknown"
-
-Q: "Are there any recent updates or changes to secrets or ConfigMaps?" A: "Yes"
-
-Q: "What is the status of the pod named 'redis-leader'?" A: "Running"
-
-Q: "Which pod is spawned by frontend deployment?" A: "php-redis"
+Q: "Name one pod which is running?" A: "frontend"  
+Q: "How many replicas are set for the 'frontend deployment'?" A: "3"  
+Q: "What is the AGE of pod named nginx'?" A: ""2 days""  
+Q: "What type of redis-leader deployment is?" A: "Stateful"  
+Q: "What is the status of all running pods in the cluster?" A: "Running"  
+Q: "How many pods are deployed across all namespaces?" A: "Unknown"  
+Q: "Are there any recent updates or changes to secrets or ConfigMaps?" A: "Yes"  
+Q: "What is the status of the pod named 'redis-leader'?" A: "Running"  
+Q: "Which pod is spawned by frontend deployment?" A: "php-redis"  
 
 **Conclusion:**
 To wrap things up, this assignment really showcases how AI can interact with a Kubernetes cluster to answer queries. My approach involves gathering information from the cluster, using GPT-4 to process it, and delivering responses to the user. This is a good example of an AI agent in action, as it autonomously collects data, reasons through it, and takes action by answering queries.

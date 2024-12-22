@@ -317,7 +317,7 @@ def query_kubernetes():
                 logging.warning(f"Invalid Query Format: {user_query}")
 
         #Print the results
-        print("\nProcessed Queries and Answers:")
+        print("\nQueries and Answers:")
         for fa in formatted_answers:
             print(fa)
 

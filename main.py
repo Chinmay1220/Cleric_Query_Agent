@@ -284,7 +284,6 @@ def query_llm(cluster_data, user_query):
 
         Query: {user_query}
         """
-
         openai.api_key = os.getenv('OPENAI_API_KEY')  #OpenAI key
 
         response = openai.ChatCompletion.create(

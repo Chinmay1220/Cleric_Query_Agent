@@ -249,7 +249,7 @@ def gather_kubernetes_data():
             for ingress in ingresses.items
         ]
 
-        #Kubeconfig Details
+        #Kube-config Details
         kubeconfig_path = os.path.expanduser("~/.kube/config")
         with open(kubeconfig_path) as kube_config_file:
             cluster_info["kubeconfig"] = kube_config_file.read()
@@ -257,7 +257,7 @@ def gather_kubernetes_data():
         #Current Context
         cluster_info["current_context"] = config.list_kube_config_contexts()[1]
 
-        #All Contexts
+        #All Context
         cluster_info["all_contexts"] = [
             context["name"] for context in config.list_kube_config_contexts()[0]
         ]
@@ -267,7 +267,7 @@ def gather_kubernetes_data():
     except Exception as e:
         raise Exception(f"Error gathering Kubernetes information: {e}")
 
-#Functionto send the data to-GPT-3.5-model   
+#Function to send the data to-GPT-3.5-model   
 def query_llm(cluster_data, user_query):
     """
     Sends the cluster_data + user_query to OpenAI ChatCompletion

@@ -280,7 +280,7 @@ def query_llm(cluster_data, user_query):
         {json.dumps(cluster_data, indent=2)}
 
         Answer the following query related to Kubernetes. Ensure your response is always a **single word**.
-        If the query is not relevant to Kubernetes or the provided information, respond with "Unknown".
+        If the query is not relevant to Kubernetes or the provided information, respond with the closed answer you think is right.
 
         Query: {user_query}
         """

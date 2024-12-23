@@ -35,7 +35,7 @@ def strip_k8s_suffix(pod_name: str) -> str:
 
 #Pydantic Models
 class QueryRequest(BaseModel):
-    queries: list[str]
+    query: str
 
 class QueryResponse(BaseModel):
     query: str
@@ -306,8 +306,8 @@ def query_llm(cluster_data, user_query):
 @app.route("/query", methods=["POST"])
 def query_kubernetes():
     """
-    Expects a JSON payload with a list of 'queries'.
-    Returns a JSON response with 'query' and 'answer' for each.
+    Expects a JSON payload with a single 'query' string.
+    Returns a JSON response with 'query' and 'answer'.
     """
     try:
         #Parse incoming JSON and validate with Pydantic
@@ -317,21 +317,25 @@ def query_kubernetes():
         #Gather cluster data once
         cluster_data = gather_kubernetes_data()
 
-        #Process each query
-        responses = []
-        for user_query in query_req.queries:
-            raw_answer = query_llm(cluster_data, user_query)
-            cleaned_answer = strip_k8s_suffix(raw_answer)  # Clean the answer if needed
-            responses.append(QueryResponse(query=user_query, answer=cleaned_answer).dict())
+        #Get the raw answer from the LLM
+        raw_answer = query_llm(cluster_data, query_req.query)
 
-            #Log each query and response
-            logging.info(f"Query: {user_query} -> {cleaned_answer}")
+        #use the helper function to strip the suffix if it matches the pattern
+        #this ensures we don't remove meaningful parts like "redis-docker",
+        #but we do remove random suffixes like "6b5f4cf68c-6g5lt".
+        cleaned_answer = strip_k8s_suffix(raw_answer)
+
+        #Log the query and answer
+        logging.info(f"Query: {query_req.query} -> {cleaned_answer}")
+
+        #Construct a typed response
+        query_res = QueryResponse(query=query_req.query, answer=cleaned_answer)
 
         #Return JSON
-        return jsonify(responses)
+        return jsonify(query_res.dict())
 
     except ValidationError as e:
-        #If the request body doesn't match the Pydantic schema
+        #If the request body doesn't match the Pydantic schema( error validation)
         logging.error(f"Validation Error: {e}")
         return jsonify({"error": "Invalid request payload", "details": e.errors()}), 400
 

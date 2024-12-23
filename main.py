@@ -279,7 +279,7 @@ def query_llm(cluster_data, user_query):
 
         {json.dumps(cluster_data, indent=2)}
 
-        Answer the following query related to Kubernetes. Ensure your response is always a **single word** also avoid commas in the answer (for eg hello,world then the answer would be just hello)..
+        Answer the following query related to Kubernetes. Ensure your response is always a **single word** also if you see  5000,5001 just give the answer as 5000.
         If the query is not relevant to Kubernetes or the provided information, respond with "Unknown".
 
         Query: {user_query}

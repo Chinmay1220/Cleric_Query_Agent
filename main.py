@@ -267,7 +267,7 @@ def gather_kubernetes_data():
     except Exception as e:
         raise Exception(f"Error gathering Kubernetes information: {e}")
 
-#Function to send the data to GPT-3.5 model   
+#Functionto send the data to-GPT-3.5-model   
 def query_llm(cluster_data, user_query):
     """
     Sends the cluster_data + user_query to OpenAI ChatCompletion
@@ -301,7 +301,7 @@ def query_llm(cluster_data, user_query):
     except Exception as e:
         raise Exception(f"Error querying the LLM: {e}")
 
-#Post Endpoint
+#Post-Endpoint
 @app.route("/query", methods=["POST"])
 def query_kubernetes():
     """

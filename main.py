@@ -272,7 +272,10 @@ def query_llm(cluster_data, user_query):
 
         Query: {user_query}
         """
-        openai.api_key = os.getenv('OPENAI_API_KEY')  #OpenAI-key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY is not set — export it before querying.")
+        openai.api_key = api_key
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -331,6 +334,8 @@ def query_kubernetes():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    if not os.getenv("OPENAI_API_KEY"):
+        logging.warning("OPENAI_API_KEY is not set; /query will fail until it is provided.")
     app.run(host="0.0.0.0", port=8000) 
 
                          

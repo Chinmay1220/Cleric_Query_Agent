@@ -1,7 +1,5 @@
-fastapi
-uvicorn
-pydantic
-openai==0.28.0
-kubernetes
-requests
-flask
+# Runtime dependencies for the Cleric Query Agent (Flask service).
+flask==3.0.3
+kubernetes==29.0.0
+openai==0.28.0        # legacy ChatCompletion API used in main.py
+pydantic==2.9.2

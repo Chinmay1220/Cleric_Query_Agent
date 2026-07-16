@@ -3,7 +3,7 @@ import os
 import json
 import openai
 from kubernetes import client, config
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 import logging
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
@@ -23,7 +23,15 @@ app = Flask(__name__)
 
 #Pydantic Models
 class QueryRequest(BaseModel):
-    query: str
+    query: str = Field(min_length=1)
+
+    @field_validator("query")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("query must not be blank")
+        return value
 
 class QueryResponse(BaseModel):
     query: str
@@ -322,7 +330,7 @@ def query_kubernetes():
         query_res = QueryResponse(query=query_req.query, answer=cleaned_answer)
 
         #Return JSON
-        return jsonify(query_res.dict())
+        return jsonify(query_res.model_dump())
 
     except ValidationError as e:
         #If the request body doesn't match the Pydantic schema( error validation)

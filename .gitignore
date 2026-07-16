@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Runtime artifacts
+agent.log
+
+# Secrets / local env (keep the example)
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

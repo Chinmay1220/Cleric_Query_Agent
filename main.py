@@ -333,6 +333,12 @@ def query_kubernetes():
         logging.error(f"Error handling request: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    """Liveness probe — does not touch Kubernetes or OpenAI."""
+    return jsonify({"status": "ok"})
+
+
 if __name__ == "__main__":
     if not os.getenv("OPENAI_API_KEY"):
         logging.warning("OPENAI_API_KEY is not set; /query will fail until it is provided.")

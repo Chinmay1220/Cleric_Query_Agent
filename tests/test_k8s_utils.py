@@ -16,3 +16,13 @@ def test_preserves_plain_name():
 def test_preserves_single_dash_name():
     # Only one dash: not a generated suffix, leave it alone.
     assert strip_k8s_suffix("redis-docker") == "redis-docker"
+
+
+def test_preserves_hyphenated_version_name():
+    # Regression: "my-app-v2" must not be stripped to "my" — the trailing
+    # segments aren't hashes (no digit in "app").
+    assert strip_k8s_suffix("my-app-v2") == "my-app-v2"
+
+
+def test_preserves_multiword_wordy_name():
+    assert strip_k8s_suffix("api-gateway-service") == "api-gateway-service"

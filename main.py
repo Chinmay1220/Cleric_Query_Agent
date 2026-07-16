@@ -335,7 +335,9 @@ def query_kubernetes():
     except ValidationError as e:
         #If the request body doesn't match the Pydantic schema( error validation)
         logging.error(f"Validation Error: {e}")
-        return jsonify({"error": "Invalid request payload", "details": e.errors()}), 400
+        # e.errors() can embed a non-serializable exception in ctx; e.json()
+        # renders a JSON-safe form, which we round-trip back to plain data.
+        return jsonify({"error": "Invalid request payload", "details": json.loads(e.json())}), 400
 
     except Exception as e:
         logging.error(f"Error handling request: {str(e)}")

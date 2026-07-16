@@ -1,6 +1,6 @@
 # Cleric_Query_Agent
 
-This project implements an AI agent capable of interacting with a Kubernetes cluster to answer queries about deployed applications. The agent uses GPT-4 for natural language processing and provides a Flask API for query submission.
+This project implements an AI agent capable of interacting with a Kubernetes cluster to answer queries about deployed applications. The agent uses OpenAI's gpt-3.5-turbo for natural language processing and provides a Flask API for query submission.
 
 **Approach for the AI Agent:**
 The agent collects information about the Kubernetes cluster, such as configuration details, deployments, pods, etc. This is the phase where the agent gathers data about its environment.
@@ -19,7 +19,7 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 ## Features
 
 - Uses Kubernetes API to gather information about cluster resources.
-- Processes natural language queries via GPT-4.
+- Processes natural language queries via OpenAI's gpt-3.5-turbo.
 - Provides a REST API for submitting and retrieving query results.
 - Logs all activity to `agent.log` for debugging.
 
@@ -29,30 +29,52 @@ The AI agent's goal is to assist users by answering queries about the Kubernetes
 
 - Python 3.10 or later
 - Kubernetes cluster (configured via `~/.kube/config`)
-- OpenAI API key for GPT-4
+- OpenAI API key
 - Dependencies specified in `requirements.txt`
 
 ---
 
-## Steps to Set Up and Run the Cleric Query Agent
+## Setup
 
+```bash
+# 1. Clone
+git clone https://github.com/Chinmay1220/Cleric_Query_Agent.git
+cd Cleric_Query_Agent
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/Chinmay1220/Cleric_Query_Agent.git
-   cd Cleric_Query_Agent
+# 2. Install dependencies
+pip install -r requirements.txt
 
-1. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
+# 3. Set your OpenAI key
+export OPENAI_API_KEY="your_api_key"
 
-1. **Set the API Key**
-   ```bash
-   export OPENAI_API_KEY="your_api_key"
+# 4. Run (HOST/PORT optional; default 0.0.0.0:8000)
+python main.py
+```
 
-1. **Run the Application**
-   ```bash
-   python main.py
+Then check liveness or send a query:
+
+```bash
+curl -s localhost:8000/healthz
+curl -s -X POST localhost:8000/query \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "How many pods are running?"}'
+```
+
+## Configuration
+
+| Env var | Default | Meaning |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | — | **required** — OpenAI API key |
+| `HOST` | `0.0.0.0` | interface to bind |
+| `PORT` | `8000` | port to bind |
+
+## Tests
+
+```bash
+pip install pytest ruff
+pytest -q
+ruff check .
+```
 
 **Testing use case for example :**
 
@@ -69,7 +91,7 @@ Q: "What is the status of the pod named 'redis-leader'?" A: "Running"
 Q: "Which pod is spawned by frontend deployment?" A: "php-redis"  
 
 **Conclusion:**
-To wrap things up, this assignment really showcases how AI can interact with a Kubernetes cluster to answer queries. My approach involves gathering information from the cluster, using GPT-4 to process it, and delivering responses to the user. This is a good example of an AI agent in action, as it autonomously collects data, reasons through it, and takes action by answering queries.
+To wrap things up, this assignment really showcases how AI can interact with a Kubernetes cluster to answer queries. My approach involves gathering information from the cluster, using gpt-3.5-turbo to process it, and delivering responses to the user. This is a good example of an AI agent in action, as it autonomously collects data, reasons through it, and takes action by answering queries.
 
 While the reasoning part currently relies on OpenAI's GPT, which isn't an internal AI model, the agent still operates in a very intelligent way by handling the tasks independently. The agent essentially does everything needed to fulfill the user's requests without needing step-by-step guidance.
 

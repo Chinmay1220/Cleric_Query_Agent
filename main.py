@@ -336,7 +336,9 @@ def query_kubernetes():
 if __name__ == "__main__":
     if not os.getenv("OPENAI_API_KEY"):
         logging.warning("OPENAI_API_KEY is not set; /query will fail until it is provided.")
-    app.run(host="0.0.0.0", port=8000) 
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    app.run(host=host, port=port) 
 
                          
 

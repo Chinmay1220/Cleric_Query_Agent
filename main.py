@@ -7,7 +7,8 @@ from pydantic import BaseModel, ValidationError
 import logging
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
-import re
+
+from k8s_utils import strip_k8s_suffix
 
 #logs
 logging.basicConfig(
@@ -19,19 +20,6 @@ logging.basicConfig(
 
 #Initialize Flask app
 app = Flask(__name__)
-
-#Function to Remove identifiers
-def strip_k8s_suffix(pod_name: str) -> str:
-    """
-    Removes the last two dash-separated segments if they look like alphanumeric
-    hashes (e.g., 'frontend-6b5f4cf68c-6g5lt' -> 'frontend').
-    Otherwise returns the pod_name unchanged.
-    """
-    pattern = r'(.*)-[a-z0-9]+-[a-z0-9]+$'
-    match = re.match(pattern, pod_name)
-    if match:
-        return match.group(1)
-    return pod_name
 
 #Pydantic Models
 class QueryRequest(BaseModel):
